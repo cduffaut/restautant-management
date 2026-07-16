@@ -126,7 +126,7 @@ func UpdateFood() gin.HandlerFunc {
 		updateObj = append(updateObj, bson.E{"updated_at", food.Updated_at})
 
 		upsert := true
-		filter := bson.M{"food_id": food.ID}
+		filter := bson.M{"food_id": foodId}
 
 		opt := options.UpdateOptions{
 			Upsert: &upsert,
@@ -186,7 +186,7 @@ func CreateFood() gin.HandlerFunc {
 }
 
 func round(num float64) int {
-
+	return int(num + math.Copysign(0.5, num))
 }
 
 func toFixed(num float64, precision int) float64 {
