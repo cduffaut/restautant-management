@@ -76,14 +76,14 @@ func UpdateOrder() gin.HandlerFunc {
 		}
 
 		if order.Table_id != nil {
-			err := menuCollection.FindOne(ctx, bson.M{"table_id": order.Table_id}).Decode(&table)
+			err := tableCollection.FindOne(ctx, bson.M{"table_id": order.Table_id}).Decode(&table)
 
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
 
-			updateObj = append(updateObj, bson.E{"order", order.Table_id})
+			updateObj = append(updateObj, bson.E{"table_id", order.Table_id})
 		}
 
 		order.Updated_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
@@ -128,7 +128,7 @@ func CreateOrder() gin.HandlerFunc {
 		}
 
 		if order.Table_id != nil {
-			err = orderCollection.FindOne(ctx, bson.M{"table_id": order.Table_id}).Decode(&table)
+			err = tableCollection.FindOne(ctx, bson.M{"table_id": order.Table_id}).Decode(&table)
 
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

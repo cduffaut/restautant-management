@@ -73,6 +73,7 @@ func GetInvoice() gin.HandlerFunc {
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
 		}
 
 		invoiceView.Order_id = invoice.Order_id
@@ -85,9 +86,12 @@ func GetInvoice() gin.HandlerFunc {
 
 		invoiceView.Invoice_id = invoice.Invoice_id
 		invoiceView.Payment_status = invoice.Payment_status
-		invoiceView.Payment_due = allOrderItems[0]["payment_due"]
-		invoiceView.Table_number = allOrderItems[0]["table_number"]
-		invoiceView.Order_details = allOrderItems[0]["invoice_items"]
+
+		if len(allOrderItems) > 0 {
+			invoiceView.Payment_due = allOrderItems[0]["payment_due"]
+			invoiceView.Table_number = allOrderItems[0]["table_number"]
+			invoiceView.Order_details = allOrderItems[0]["invoice_items"]
+		}
 
 		c.JSON(http.StatusOK, invoiceView)
 	}
@@ -144,13 +148,14 @@ func CreateInvoice() gin.HandlerFunc {
 		defer cancel()
 
 		var invoice models.Invoice
+		var order models.Order
 
 		if err := c.BindJSON(&invoice); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		err := orderCollection.FindOne(ctx, bson.M{"order_id": invoice.Order_id}).Decode(&invoice)
+		err := orderCollection.FindOne(ctx, bson.M{"order_id": invoice.Order_id}).Decode(&order)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

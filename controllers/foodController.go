@@ -39,7 +39,7 @@ func GetFoods() gin.HandlerFunc {
 		}
 
 		startIndex := (page - 1) * recordPerPage
-		startIndex, err = strconv.Atoi(c.Query(startIndex))
+		startIndex, err = strconv.Atoi(c.Query(string(startIndex)))
 
 		matchStage := bson.D{{"$match", bson.D{{}}}}
 		groupStage := bson.D{{"$group", bson.D{{"_id", bson.D{{"_id", "null"}}}, {"total_count", bson.D{{"$sum", "1"}}}, {"data", bson.D{{"$push", "$$ROOT"}}}}}}
@@ -72,7 +72,7 @@ func GetFood() gin.HandlerFunc {
 		foodId := c.Param("food_id")
 		var food models.Food
 
-		err := foodCollection.findOne(ctx, bson.M{"food_id": foodId}.Decode(&food))
+		err := foodCollection.FindOne(ctx, bson.M{"food_id": foodId}).Decode(&food)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "an error occured while fetching the food item"})
 			return
@@ -119,7 +119,7 @@ func UpdateFood() gin.HandlerFunc {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Errorf("menu not found")})
 				return
 			}
-			updateObj = append(updateObj, bson.E{"menu", food.Price})
+			updateObj = append(updateObj, bson.E{"menu_id", food.Menu_id})
 		}
 
 		food.Updated_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))

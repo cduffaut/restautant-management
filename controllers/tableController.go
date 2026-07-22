@@ -23,7 +23,7 @@ func GetTables() gin.HandlerFunc {
 
 		defer cancel()
 
-		res, err := orderCollection.Find(context.TODO(), bson.M{})
+		res, err := tableCollection.Find(context.TODO(), bson.M{})
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

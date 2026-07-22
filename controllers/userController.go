@@ -38,7 +38,6 @@ func GetUsers() gin.HandlerFunc {
 		}
 
 		startIndex := (page - 1) * recordPerPage
-		startIndex, err = strconv.Atoi(c.Query("startIndex"))
 
 		matchStage := bson.D{{"$match", bson.D{{}}}}
 		projectStage := bson.D{{"$project", bson.D{{"_id", 0}, {"total_count", 1}, {"user_items", bson.D{{"$slice", []interface{}{"data", startIndex, recordPerPage}}}}}}}
@@ -100,29 +99,29 @@ func SignUp() gin.HandlerFunc {
 			return
 		}
 
-		count, err := userCollection.CountDocuments(ctx, bson.M{"email": user.Email})
+		emailCount, err := userCollection.CountDocuments(ctx, bson.M{"email": user.Email})
 
 		if err != nil {
 			log.Panic(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		phoneCount, err := userCollection.CountDocuments(ctx, bson.M{"phone": user.Phone})
+
+		if err != nil {
+			log.Panic(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		if emailCount > 0 || phoneCount > 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Email or phone number already exist"})
 			return
 		}
 
 		password := HashPassword(*user.Password)
 		user.Password = &password
-
-		count, err = userCollection.CountDocuments(ctx, bson.M{"phone": user.Phone})
-
-		if err != nil {
-			log.Panic(err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		if count > 0 {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Errorf("Email or phone number already exist")})
-			return
-		}
 
 		user.Created_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 		user.Updated_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))

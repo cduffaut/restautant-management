@@ -16,11 +16,11 @@ import (
 )
 
 type SignedDetails struct {
-	Email          string
-	Firstname      string
-	Lastname       string
-	Uid            string
-	StandardClaims jwt.StandardClaims
+	Email     string
+	Firstname string
+	Lastname  string
+	Uid       string
+	jwt.StandardClaims
 }
 
 var SECRET_KEY = os.Getenv("SECRET_KEY")
@@ -60,7 +60,7 @@ func UpdateAllTokens(signedToken string, signedRfreshToken string, userId string
 
 	defer cancel()
 
-	var updateObj = primitive.D
+	var updateObj primitive.D
 
 	updateObj = append(updateObj, bson.E{"token", signedToken})
 	updateObj = append(updateObj, bson.E{"refresh_token", signedRfreshToken})
@@ -94,26 +94,28 @@ func UpdateAllTokens(signedToken string, signedRfreshToken string, userId string
 
 func ValidateToken(signedToken string) (claims SignedDetails, msg string) {
 
-	jwt.ParseWithClaims(
+	token, err := jwt.ParseWithClaims(
 		signedToken,
-		&SignedDetails,
+		&SignedDetails{},
 		func(token *jwt.Token) (interface{}, error) {
 			return []byte(SECRET_KEY), nil
 		},
 	)
 
+	if err != nil {
+		msg = err.Error()
+		return
+	}
+
 	claims, ok := token.Claims.(SignedDetails)
 
 	if !ok {
 		msg = fmt.Sprintf("The token is invalid")
-		msg = err.Error()
-
 		return
 	}
 
 	if claims.StandardClaims.ExpiresAt < time.Now().Local().Unix() {
 		msg = fmt.Sprint("Token is expired")
-		msg = err.Error()
 		return
 	}
 

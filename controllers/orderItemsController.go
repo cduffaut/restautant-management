@@ -67,7 +67,7 @@ func ItemsByOrder(id string) (orderItems []primitive.M, err error) {
 
 	matchStage := bson.D{{"$match", bson.D{{"order_id", id}}}}
 	lookupStage := bson.D{{"$lookup", bson.D{{"from", "food"}, {"localField", "food_id"}, {"foreignField", "food_id"}, {"as", "food"}}}}
-	unwindFoodStage := bson.D{{"$unwind", bson.D{{"path", "$food"}, {"preservedNullAndEmptyArrays", true}}}}
+	unwindFoodStage := bson.D{{"$unwind", bson.D{{"path", "$food"}, {"preserveNullAndEmptyArrays", true}}}}
 
 	lookupOrderStage := bson.D{{"$lookup", bson.D{{"from", "order"}, {"localField", "order_id"}, {"foreignField", "order_id"}, {"as", "order"}}}}
 	unwindOrderStage := bson.D{{"$unwind", bson.D{{"path", "$order"}, {"preserveNullAndEmptyArrays", true}}}}
@@ -78,7 +78,7 @@ func ItemsByOrder(id string) (orderItems []primitive.M, err error) {
 	// manage the fields that you'll be returning to the frontend/next stage
 	projectStage := bson.D{
 		{"$project", bson.D{
-			{"id", 0},
+			{"_id", 0},
 			{"amount", "$food.price"},
 			{"total_count", 1},
 			{"food_name", "$food.name"},
@@ -92,7 +92,7 @@ func ItemsByOrder(id string) (orderItems []primitive.M, err error) {
 
 	groupStage := bson.D{{"$group", bson.D{{"_id", bson.D{{"order_id", "$order_id"}, {"table_id", "$table_id"}, {"table_number", "$table_number"}}}, {"payment_due", bson.D{{"$sum", "$amount"}}}, {"total_count", bson.D{{"$sum", 1}}}, {"order_items", bson.D{{"$push", "$$ROOT"}}}}}}
 
-	projectStage2 := bson.D{{"$project", bson.D{{"id", 0}, {"payment_due", 1}, {"total_count", 1}, {"table_number", "$_id.table_number"}, {"order_items", 1}}}}
+	projectStage2 := bson.D{{"$project", bson.D{{"_id", 0}, {"payment_due", 1}, {"total_count", 1}, {"table_number", "$_id.table_number"}, {"invoice_items", 1}}}}
 
 	res, err := orderItemCollection.Aggregate(ctx, mongo.Pipeline{
 		matchStage,
